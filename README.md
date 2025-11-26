@@ -1,11 +1,8 @@
 # Vinyl Collector
 
-Vinyl Collector is a simple scanning tool for digitally archiving your music collection, providing quick ID lookup through the app's scanner / file upload functionality. 
+Vinyl Collector is a simple scanning tool for digitally archiving your music collection, providing quick ID lookup through the app's scanner / file upload functionality. The app returns a top 5 in similarity search for recommendation.
 
-
-<img width="804" height="575" alt="Screenshot 2025-11-25 at 4 53 46 PM" src="https://github.com/user-attachments/assets/82cea8f0-f954-4b49-b002-206748087c36" />
-<img width="818" height="577" alt="Screenshot 2025-11-25 at 4 53 52 PM" src="https://github.com/user-attachments/assets/1b0d2b32-b0c9-44dd-8198-3a5c2efc3791" />
-<img width="799" height="452" alt="Screenshot 2025-11-25 at 5 08 20 PM" src="https://github.com/user-attachments/assets/af164071-9e1c-467e-8dc0-f5090aefd9ca" />
+<img width="1230" height="861" alt="Screenshot 2025-11-25 at 10 39 40 PM" src="https://github.com/user-attachments/assets/adecfd62-1295-44b9-bfe1-6ff6c0dadf27" />
 
 ### Features
 
