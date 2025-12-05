@@ -117,599 +117,299 @@ HTML_TEMPLATE = """
             }
         }
 
-                function addToGalleryDOM(filename, public_url, prepend = false, ocr_results = []) {
+        function addToGalleryDOM(filename, public_url, prepend = false, ocr_results = []) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'gallery-item';
+            itemDiv.onclick = () => openModalWithDetails(filename, public_url);
 
-                    const itemDiv = document.createElement('div');
+            const img = document.createElement('img');
+            img.src = public_url;
+            img.alt = filename;
+            itemDiv.appendChild(img);
 
-                    itemDiv.className = 'gallery-item';
-
-                    itemDiv.onclick = () => openModalWithDetails(filename, public_url);
-
+            if (ocr_results && ocr_results.length > 0) {
+                const textDiv = document.createElement('div');
+                textDiv.className = 'gallery-item-text';
+                textDiv.innerText = ocr_results.map(r => r[0]).join(', ');
+                itemDiv.appendChild(textDiv);
+            }
+            
+            if (prepend && galleryDiv.children.length > 1) {
+                galleryDiv.insertBefore(itemDiv, galleryDiv.children[1]);
+            } else {
+                galleryDiv.appendChild(itemDiv);
+            }
+        }
         
+        async function openModalWithDetails(filename, public_url) {
+            modal.style.display = "block";
+            modalImg.src = public_url;
+            detailsContent.innerText = "Loading details...";
+            modalMatchesContainer.innerHTML = ""; // Clear previous matches
 
-                    const img = document.createElement('img');
-
-                    img.src = public_url;
-
-                    img.alt = filename;
-
-                    itemDiv.appendChild(img);
-
-        
-
-                    if (ocr_results && ocr_results.length > 0) {
-
-                        const textDiv = document.createElement('div');
-
-                        textDiv.className = 'gallery-item-text';
-
-                        textDiv.innerText = ocr_results.map(r => r[0]).join(', ');
-
-                        itemDiv.appendChild(textDiv);
-
-                    }
-
-                    
-
-                    if (prepend && galleryDiv.children.length > 1) {
-
-                        galleryDiv.insertBefore(itemDiv, galleryDiv.children[1]);
-
+            try {
+                const response = await fetch(`/details/${filename}`);
+                const data = await response.json();
+                if (data.error) {
+                    detailsContent.innerText = `Error: ${data.error}`;
+                } else {
+                    const texts = data.ocr_results.map(item => `'${item[0]}' (Confidence: ${item[1].toFixed(2)})`).join('\n');
+                    let ocrText = `Detected Text:\n`;
+                    if (data.ocr_results.length > 0) {
+                        ocrText += texts;
                     } else {
-
-                        galleryDiv.appendChild(itemDiv);
-
+                        ocrText += "[] (No text detected or confidence too low)";
                     }
+                    const embeddingText = `Embedding: ${data.embedding_summary}`;
+                    detailsContent.innerText = `${ocrText}\n\n${embeddingText}`;
 
+                    if (data.matches && data.matches.length > 0) {
+                        displayMatches(data.matches, 'modal-matches-container');
+                    } else {
+                        modalMatchesContainer.innerHTML = '<h3>Top Matches</h3><p>No matches found.</p>';
+                    }
                 }
+            } catch (e) {
+                detailsContent.innerText = "Could not fetch details.";
+            }
+        }
 
+        snapBtn.addEventListener('click', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/jpeg');
+            saveSnapshot(dataURL);
+        });
+
+        uploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) { return; }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataURL = e.target.result;
+                saveSnapshot(dataURL);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = null;
+        });
+
+        function displayMatches(matches, containerId = 'results-container') {
+            const resultsContainer = document.getElementById(containerId);
+            resultsContainer.innerHTML = '<h3>Top Matches</h3>';
+            if (!matches || matches.length === 0) {
+                resultsContainer.innerHTML += '<p>No matches found.</p>';
+                return;
+            }
+            const matchesGrid = document.createElement('div');
+            matchesGrid.className = 'matches-grid';
+            matches.forEach(match => {
+                const matchDiv = document.createElement('div');
+                matchDiv.className = 'match-item';
                 
+                const img = document.createElement('img');
+                img.src = match.cover_url;
+                img.alt = `${match.artist} - ${match.title}`;
+                
+                const title = document.createElement('p');
+                title.className = 'title';
+                title.innerText = match.title;
+                
+                const artist = document.createElement('p');
+                artist.className = 'artist';
+                artist.innerText = match.artist;
 
-                async function openModalWithDetails(filename, public_url) {
+                const details = document.createElement('p');
+                details.className = 'details';
+                details.innerText = `${match.year || ''} • ${match.style || ''}`;
 
-                    modal.style.display = "block";
+                matchDiv.appendChild(img);
+                matchDiv.appendChild(title);
+                matchDiv.appendChild(artist);
+                matchDiv.appendChild(details);
+                matchesGrid.appendChild(matchDiv);
+            });
+            resultsContainer.appendChild(matchesGrid);
+        }
 
-                    modalImg.src = public_url;
-
-                    detailsContent.innerText = "Loading details...";
-
-                    modalMatchesContainer.innerHTML = ""; // Clear previous matches
-
-        
-
-                    try {
-
-                        const response = await fetch(`/details/${filename}`);
-
-                        const data = await response.json();
-
-                        if (data.error) {
-
-                            detailsContent.innerText = `Error: ${data.error}`;
-
-                        } else {
-
-                            const texts = data.ocr_results.map(item => `'${item[0]}' (Confidence: ${item[1].toFixed(2)})`).join('\\n');
-
-                            let ocrText = `Detected Text:\\n`;
-
-                            if (data.ocr_results.length > 0) {
-
-                                ocrText += texts;
-
-                            } else {
-
-                                ocrText += "[] (No text detected or confidence too low)";
-
-                            }
-
-                            const embeddingText = `Embedding: ${data.embedding_summary}`;
-
-                            detailsContent.innerText = `${ocrText}\\n\\n${embeddingText}`;
-
-        
-
-                            if (data.matches && data.matches.length > 0) {
-
-                                displayMatches(data.matches, 'modal-matches-container');
-
-                            } else {
-
-                                modalMatchesContainer.innerHTML = '<h3>Top Matches</h3><p>No matches found.</p>';
-
-                            }
-
-                        }
-
-                    } catch (e) {
-
-                        detailsContent.innerText = "Could not fetch details.";
-
-                    }
-
-                }
-
-        
-
-                snapBtn.addEventListener('click', () => {
-
-                    canvas.width = video.videoWidth;
-
-                    canvas.height = video.videoHeight;
-
-                    const context = canvas.getContext('2d');
-
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    const dataURL = canvas.toDataURL('image/jpeg');
-
-                    saveSnapshot(dataURL);
-
+        async function saveSnapshot(base64Data) {
+            statusDiv.innerText = "Saving and processing...";
+            document.getElementById('results-container').innerHTML = ''; // Clear previous results
+            try {
+                const response = await fetch('/save_snapshot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Data })
                 });
-
-        
-
-                uploadInput.addEventListener('change', (event) => {
-
-                    const file = event.target.files[0];
-
-                    if (!file) { return; }
-
-        
-
-                    const reader = new FileReader();
-
-                    reader.onload = (e) => {
-
-                        const dataURL = e.target.result;
-
-                        saveSnapshot(dataURL);
-
-                    };
-
-                    reader.readAsDataURL(file);
-
-                    event.target.value = null;
-
-                });
-
-        
-
-                function displayMatches(matches, containerId = 'results-container') {
-
-                    const resultsContainer = document.getElementById(containerId);
-
-                    resultsContainer.innerHTML = '<h3>Top Matches</h3>';
-
-                    if (!matches || matches.length === 0) {
-
-                        resultsContainer.innerHTML += '<p>No matches found.</p>';
-
-                        return;
-
-                    }
-
-                    const matchesGrid = document.createElement('div');
-
-                    matchesGrid.className = 'matches-grid';
-
-                    matches.forEach(match => {
-
-                        const matchDiv = document.createElement('div');
-
-                        matchDiv.className = 'match-item';
-
-                        
-
-                        const img = document.createElement('img');
-
-                        img.src = match.cover_url;
-
-                        img.alt = `${match.artist} - ${match.title}`;
-
-                        
-
-                        const title = document.createElement('p');
-
-                        title.className = 'title';
-
-                        title.innerText = match.title;
-
-                        
-
-                        const artist = document.createElement('p');
-
-                        artist.className = 'artist';
-
-                        artist.innerText = match.artist;
-
-        
-
-                        const details = document.createElement('p');
-
-                        details.className = 'details';
-
-                        details.innerText = `${match.year || ''} • ${match.style || ''}`;
-
-        
-
-                        matchDiv.appendChild(img);
-
-                        matchDiv.appendChild(title);
-
-                        matchDiv.appendChild(artist);
-
-                        matchDiv.appendChild(details);
-
-                        matchesGrid.appendChild(matchDiv);
-
-                    });
-
-                    resultsContainer.appendChild(matchesGrid);
-
+                const result = await response.json();
+                if (result.success) {
+                    statusDiv.innerText = "Snapshot saved: " + result.filename;
+                    statusDiv.style.color = "green";
+                    addToGalleryDOM(result.filename, result.public_url, true, result.ocr_results);
+                    displayMatches(result.matches);
+                    setTimeout(() => { statusDiv.innerText = ""; }, 3000);
+                } else {
+                    statusDiv.innerText = `Error: ${result.error}`;
+                    statusDiv.style.color = "red";
                 }
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerText = "Network error during save.";
+            }
+        }
 
+        span.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) {
+            if (event.target == modal) { modal.style.display = "none"; }
+        }
+
+        startCamera();
+        loadGallery();
+    </script>
+</body>
+</html>
+"
+
+
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
+
+
+@app.route('/save_snapshot', methods=['POST'])
+def save_snapshot():
+    data = request.get_json()
+    if not data or 'image' not in data:
+        return jsonify({'success': False, 'error': 'No image data found'}), 400
+
+    try:
+        header, encoded = data['image'].split(",", 1)
+        image_bytes = base64.b64decode(encoded)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"snapshot_{timestamp}.jpg"
         
+        # Use a temporary file for processing
+        temp_dir = "/tmp/vinyl-detection"
+        os.makedirs(temp_dir, exist_ok=True)
+        filepath = os.path.join(temp_dir, filename)
 
-                async function saveSnapshot(base64Data) {
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
 
-                    statusDiv.innerText = "Saving and processing...";
-
-                    document.getElementById('results-container').innerHTML = ''; // Clear previous results
-
-                    try {
-
-                        const response = await fetch('/save_snapshot', {
-
-                            method: 'POST',
-
-                            headers: { 'Content-Type': 'application/json' },
-
-                            body: JSON.stringify({ image: base64Data })
-
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-
-                            statusDiv.innerText = "Snapshot saved: " + result.filename;
-
-                            statusDiv.style.color = "green";
-
-                            addToGalleryDOM(result.filename, result.public_url, true, result.ocr_results);
-
-                            displayMatches(result.matches);
-
-                            setTimeout(() => { statusDiv.innerText = ""; }, 3000);
-
-                        } else {
-
-                            statusDiv.innerText = `Error: ${result.error}`;
-
-                            statusDiv.style.color = "red";
-
-                        }
-
-                    } catch (error) {
-
-                        console.error('Error:', error);
-
-                        statusDiv.innerText = "Network error during save.";
-
-                    }
-
-                }
-
+        # Upload to Supabase Storage
+        bucket = "vinyl_images"
+        supabase.storage.from_(bucket).upload(
+            path=filename,
+            file=image_bytes,
+            file_options={"content-type": "image/jpeg"}
+        )
+        public_url = supabase.storage.from_(bucket).get_public_url(filename)
         
+        # --- Run Post-Processing ---
+        # 1. OCR
+        raw_ocr_result = extract_ocr_text(filepath)
+        processed_ocr_results = []
+        if isinstance(raw_ocr_result, list) and raw_ocr_result and isinstance(raw_ocr_result[0], dict):
+            # ... (rest of OCR processing logic is the same)
+            ocr_data = raw_ocr_result[0]
+            rec_texts = ocr_data.get('rec_texts', [])
+            rec_scores = ocr_data.get('rec_scores', [])
 
-                span.onclick = function() { modal.style.display = "none"; }
-
-                window.onclick = function(event) {
-
-                    if (event.target == modal) { modal.style.display = "none"; }
-
-                }
-
+            if rec_texts and rec_scores and len(rec_texts) == len(rec_scores):
+                all_results = list(zip(rec_texts, rec_scores))
+                processed_ocr_results = [
+                    (text, score)
+                    for text, score in all_results
+                    if score > OCR_CONFIDENCE_THRESHOLD
+                ]
         
+        # 2. Embedding and Matching
+        embedding = generate_dinov2_embedding(filepath)
+        matches = []
+        if embedding is not None:
+            matches = find_top_matches_by_embedding(supabase, embedding, top_k=5)
 
-                startCamera();
+        # 3. Save record to Supabase database
+        ocr_text_only = [text for text, score in processed_ocr_results]
+        supabase.table('snapshots').insert({
+            "image_path": filename, # Store the path/filename, not the full URL
+            "ocr_text": ", ".join(ocr_text_only),
+            "embedding": embedding.tolist() if embedding is not None else None
+        }).execute()
 
-                loadGallery();
+        # Clean up temporary file
+        os.remove(filepath)
 
-            </script>
+        print(f"Saved and processed: {filename}")
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'public_url': public_url,
+            'ocr_results': processed_ocr_results or [],
+            'matches': matches or []
+        })
 
-        </body>
+    except Exception as e:
+        print(f"Error saving image: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-        </html>
 
-        """
+@app.route('/details/<filename>')
+def get_details(filename):
+    """Returns OCR results, embedding details, and matches for a given filename."""
+    try:
+        response = supabase.table('snapshots').select('ocr_text, embedding').eq('image_path', filename).single().execute()
+        data = response.data
+        if not data:
+            return jsonify({'error': 'Snapshot not found'}), 404
 
+        # The ocr_text is stored as a comma-separated string, let's pretend we can parse it back
+        # This part is a bit of a simplification. Storing structured data would be better.
+        ocr_results = [(text, 0.99) for text in data.get('ocr_text', '').split(', ')] if data.get('ocr_text') else []
+
+        embedding = data.get('embedding')
+        embedding_summary = "Not found"
+        matches = []
+        if embedding:
+            embedding_summary = f"Exists (first 5 values: {', '.join(map(str, embedding[:5]))}...)"
+            matches = find_top_matches_by_embedding(supabase, np.array(embedding), top_k=5)
+
+        return jsonify({
+            'ocr_results': ocr_results,
+            'embedding_summary': embedding_summary,
+            'matches': matches or []
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/gallery')
+def get_gallery_items():
+    try:
+        response = supabase.table('snapshots').select('image_path, ocr_text').order('created_at', desc=True).limit(20).execute()
+        data = response.data
         
-
-        
-
-        @app.route('/')
-
-        def index():
-
-            return render_template_string(HTML_TEMPLATE)
-
-        
-
-        
-
-        @app.route('/save_snapshot', methods=['POST'])
-
-        def save_snapshot():
-
-            data = request.get_json()
-
-            if not data or 'image' not in data:
-
-                return jsonify({'success': False, 'error': 'No image data found'}), 400
-
-        
-
-            try:
-
-                header, encoded = data['image'].split(",", 1)
-
-                image_bytes = base64.b64decode(encoded)
-
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-                filename = f"snapshot_{timestamp}.jpg"
-
-                
-
-                # Use a temporary file for processing
-
-                temp_dir = "/tmp/vinyl-detection"
-
-                os.makedirs(temp_dir, exist_ok=True)
-
-                filepath = os.path.join(temp_dir, filename)
-
-        
-
-                with open(filepath, "wb") as f:
-
-                    f.write(image_bytes)
-
-        
-
-                # Upload to Supabase Storage
-
-                bucket = "vinyl_images"
-
-                supabase.storage.from_(bucket).upload(
-
-                    path=filename,
-
-                    file=image_bytes,
-
-                    file_options={"content-type": "image/jpeg"}
-
-                )
-
-                public_url = supabase.storage.from_(bucket).get_public_url(filename)
-
-                
-
-                # --- Run Post-Processing ---
-
-                # 1. OCR
-
-                raw_ocr_result = extract_ocr_text(filepath)
-
-                processed_ocr_results = []
-
-                if isinstance(raw_ocr_result, list) and raw_ocr_result and isinstance(raw_ocr_result[0], dict):
-
-                    # ... (rest of OCR processing logic is the same)
-
-                    ocr_data = raw_ocr_result[0]
-
-                    rec_texts = ocr_data.get('rec_texts', [])
-
-                    rec_scores = ocr_data.get('rec_scores', [])
-
-        
-
-                    if rec_texts and rec_scores and len(rec_texts) == len(rec_scores):
-
-                        all_results = list(zip(rec_texts, rec_scores))
-
-                        processed_ocr_results = [
-
-                            (text, score)
-
-                            for text, score in all_results
-
-                            if score > OCR_CONFIDENCE_THRESHOLD
-
-                        ]
-
-                
-
-                # 2. Embedding and Matching
-
-                embedding = generate_dinov2_embedding(filepath)
-
-                matches = []
-
-                if embedding is not None:
-
-                    matches = find_top_matches_by_embedding(supabase, embedding, top_k=5)
-
-        
-
-                # 3. Save record to Supabase database
-
-                ocr_text_only = [text for text, score in processed_ocr_results]
-
-                supabase.table('snapshots').insert({
-
-                    "image_path": filename, # Store the path/filename, not the full URL
-
-                    "ocr_text": ", ".join(ocr_text_only),
-
-                    "embedding": embedding.tolist() if embedding is not None else None
-
-                }).execute()
-
-        
-
-                # Clean up temporary file
-
-                os.remove(filepath)
-
-        
-
-                print(f"Saved and processed: {filename}")
-
-                return jsonify({
-
-                    'success': True,
-
-                    'filename': filename,
-
-                    'public_url': public_url,
-
-                    'ocr_results': processed_ocr_results or [],
-
-                    'matches': matches or []
-
-                })
-
-        
-
-            except Exception as e:
-
-                print(f"Error saving image: {e}")
-
-                import traceback
-
-                traceback.print_exc()
-
-                return jsonify({'success': False, 'error': str(e)}), 500
-
-        
-
-        
-
-        @app.route('/details/<filename>')
-
-        def get_details(filename):
-
-            """Returns OCR results, embedding details, and matches for a given filename."""
-
-            try:
-
-                response = supabase.table('snapshots').select('ocr_text, embedding').eq('image_path', filename).single().execute()
-
-                data = response.data
-
-                if not data:
-
-                    return jsonify({'error': 'Snapshot not found'}), 404
-
-        
-
-                # The ocr_text is stored as a comma-separated string, let's pretend we can parse it back
-
-                # This part is a bit of a simplification. Storing structured data would be better.
-
-                ocr_results = [(text, 0.99) for text in data.get('ocr_text', '').split(', ')] if data.get('ocr_text') else []
-
-        
-
-                embedding = data.get('embedding')
-
-                embedding_summary = "Not found"
-
-                matches = []
-
-                if embedding:
-
-                    embedding_summary = f"Exists (first 5 values: {', '.join(map(str, embedding[:5]))}...)"
-
-                    matches = find_top_matches_by_embedding(supabase, np.array(embedding), top_k=5)
-
-        
-
-                return jsonify({
-
-                    'ocr_results': ocr_results,
-
-                    'embedding_summary': embedding_summary,
-
-                    'matches': matches or []
-
-                })
-
-            except Exception as e:
-
-                return jsonify({'error': str(e)}), 500
-
-        
-
-        @app.route('/gallery')
-
-        def get_gallery_items():
-
-            try:
-
-                response = supabase.table('snapshots').select('image_path, ocr_text').order('created_at', desc=True).limit(20).execute()
-
-                data = response.data
-
-                
-
-                gallery_items = []
-
-                for item in data:
-
-                    filename = item['image_path']
-
-                    public_url = supabase.storage.from_('vinyl_images').get_public_url(filename)
-
-                    # Simplification for OCR text display
-
-                    ocr_texts = item.get('ocr_text', '').split(', ')
-
-                    ocr_results = [(text, 1.0) for text in ocr_texts if text]
-
-        
-
-                    gallery_items.append({
-
-                        'filename': filename,
-
-                        'public_url': public_url,
-
-                        'ocr_results': ocr_results
-
-                    })
-
-        
-
-                return jsonify(gallery_items)
-
-            except Exception as e:
-
-                print(f"Error in get_gallery_items: {e}")
-
-                return jsonify([]), 500
-
-        
-
-        if __name__ == '__main__':
-
-            app.run(debug=True, port=5000)
-
-        
-
-
-        
+        gallery_items = []
+        for item in data:
+            filename = item['image_path']
+            public_url = supabase.storage.from_('vinyl_images').get_public_url(filename)
+            # Simplification for OCR text display
+            ocr_texts = item.get('ocr_text', '').split(', ')
+            ocr_results = [(text, 1.0) for text in ocr_texts if text]
+
+            gallery_items.append({
+                'filename': filename,
+                'public_url': public_url,
+                'ocr_results': ocr_results
+            })
+
+        return jsonify(gallery_items)
+    except Exception as e:
+        print(f"Error in get_gallery_items: {e}")
+        return jsonify([]), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
