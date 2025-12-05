@@ -1,11 +1,8 @@
-# Vinyl Collector
+# Vinyl Collector - Vinyl Record Recognition App
 
-Vinyl Collector is a simple scanning tool for digitally archiving your music collection, providing quick ID lookup through the app's scanner / file upload functionality and returning a list of the identified album and other similar releases.
+Vinyl Collector is a web-based application designed for music collectors to identify vinyl records by simply taking a picture of the album cover. This tool uses computer vision and semantic search to find matches from a database of album covers, providing metadata and helping collectors manage and identify their collections. 
 
-<img width="1336" height="792" alt="Screenshot 2025-11-25 at 10 47 44 PM" src="https://github.com/user-attachments/assets/11ed6e27-b4de-4ce2-bcd3-7d60f0cdd83d" />
-
-
-### Features
+## Features
 
 *   **Image Recognition**: Identify vinyl records by uploading an image or taking a snapshot from your device's camera.
 *   **Semantic Search**: Utilizes the DINOv2 model to generate image embeddings and find the most visually similar album covers from the database.
@@ -13,7 +10,7 @@ Vinyl Collector is a simple scanning tool for digitally archiving your music col
 *   **Top Matches Display**: Shows the top 5 closest matches from the database, including album art, title, artist, year, and style.
 *   **Snapshot Gallery**: A gallery view of recently captured or uploaded images, allowing you to review past searches.
 
-### Technology Stack
+## Technology Stack
 
 *   **Backend**: Python, Flask
 *   **Frontend**: HTML5, CSS3, JavaScript
@@ -23,7 +20,7 @@ Vinyl Collector is a simple scanning tool for digitally archiving your music col
     *   `PaddleOCR` for Optical Character Recognition (OCR).
 *   **Data Source**: `discogs-client` for fetching album metadata from the Discogs API.
 
-### Project Structure
+## Project Structure
 
 ```
 /
@@ -37,33 +34,33 @@ Vinyl Collector is a simple scanning tool for digitally archiving your music col
 └─── covers/                   # Directory where album cover art is downloaded
 ```
 
-### Setup and Installation
+## Setup and Installation
 
-#### 1. Prerequisites
+### 1. Prerequisites
 *   Python 3.10+
 *   PostgreSQL with the `pgvector` extension installed.
 *   A Discogs account to get an API token.
 
-#### 2. Clone the Repository
+### 2. Clone the Repository
 ```bash
 git clone <your-repository-url>
 cd vinyl-detection
 ```
 
-#### 3. Set up the Environment
+### 3. Set up the Environment
 Create and activate a Python virtual environment:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-#### 4. Install Dependencies
+### 4. Install Dependencies
 Install the required Python packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-#### 5. Configure Environment Variables
+### 5. Configure Environment Variables
 Create a `.env` file in the root directory by copying the example file:
 ```bash
 cp .env.example .env
@@ -81,15 +78,15 @@ TABLE_NAME="album_covers"
 DISCOGS_USER_TOKEN="your_discogs_token_here"
 ```
 
-#### 6. Set up the Database
+### 6. Set up the Database
 Make sure your PostgreSQL server is running and you have created the database specified in your `DB_URL`. The `pgvector` extension must also be enabled on the database. You can do this by connecting to your database and running:
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-### Usage
+## Usage
 
-#### 1. Populate the Database
+### 1. Populate the Database
 Before running the app, you need to populate the database with album data from Discogs. The `extract_images.py` script fetches metadata and cover art, and `push_to_db.py` will create the table and insert the data.
 
 First, run the extraction script. This will fetch data based on styles listed in `cleaned_styles.csv`, download covers, and generate embeddings.
@@ -101,14 +98,14 @@ After this completes, run the push script to populate your PostgreSQL database:
 python .venv/include/vinyl-detection/push_to_db.py
 ```
 
-#### 2. Run the Application
+### 2. Run the Application
 Once the database is populated, you can start the web application:
 ```bash
 python camera_app.py
 ```
 Open your web browser and navigate to `http://127.0.0.1:5000` to start using the app.
 
-### Future Work
+## Future Work
 
 *   **Wrap in a Mobile App**: Use a framework like Capacitor or React Native to wrap the web application into a native mobile app for iOS and Android.
 *   **User Accounts**: Add user authentication to allow collectors to save their collections.

@@ -1,0 +1,11 @@
+# Ignore generated files and directories
+image_embeddings.csv
+matches.csv
+metadata_with_embeddings.csv
+metadata.csv
+ocr_results.csv
+covers/
+snapshots/
+
+# Ignore .env file as it contains sensitive information
+.env
