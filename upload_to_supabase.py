@@ -16,7 +16,7 @@ URL: str = os.environ.get("SUPABASE_URL")
 KEY: str = os.environ.get("SUPABASE_ANON_KEY")
 
 # Name of the table you want to insert data into
-TABLE_NAME = "albums"
+TABLE_NAME = "album_covers"
 
 # Path to your CSV file
 CSV_FILE_PATH = "metadata_with_embeddings.csv"

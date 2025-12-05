@@ -301,7 +301,7 @@ def save_snapshot():
             f.write(image_bytes)
 
         # Upload to Supabase Storage
-        bucket = "vinyl_images"
+        bucket = "snapshots"
         supabase.storage.from_(bucket).upload(
             path=filename,
             file=image_bytes,
@@ -397,7 +397,7 @@ def get_gallery_items():
         gallery_items = []
         for item in data:
             filename = item['image_path']
-            public_url = supabase.storage.from_('vinyl_images').get_public_url(filename)
+            public_url = supabase.storage.from_('snapshots').get_public_url(filename)
             # Simplification for OCR text display
             ocr_texts = item.get('ocr_text', '').split(', ')
             ocr_results = [(text, 1.0) for text in ocr_texts if text]
