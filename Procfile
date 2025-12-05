@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORTcamera_app:app
+gunicorn camera_app:app --bind 0.0.0.0:8080.
