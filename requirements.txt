@@ -1,21 +1,24 @@
-# Inferred dependencies from extract_images.py
-# Versions are not pinned — pin versions after testing (pip freeze > requirements.txt)
-pandas
-discogs-client
-python-dotenv
-tqdm
-requests
-pytesseract
-Pillow
-google-cloud-vision
-torch
-numpy
-transformers
-sqlalchemy
+# Web Framework & Server
+flask
+gunicorn
+
+# Database
 psycopg2-binary
 pgvector
-git+https://github.com/openai/CLIP.git
+sqlalchemy
 supabase
-gunicorn
-flask
+
+# Machine Learning & Data Processing
+numpy==2.2.9
+pandas
+torch==2.9.0
+transformers
+paddleocr
 opencv-python
+google-cloud-vision
+
+# APIs & Utilities
+python-dotenv
+requests
+tqdm
+discogs-client
