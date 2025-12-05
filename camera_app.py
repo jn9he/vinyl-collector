@@ -427,11 +427,15 @@ HTML_TEMPLATE = """
 
         
 
+        
+
         @app.route('/')
 
         def index():
 
             return render_template_string(HTML_TEMPLATE)
+
+        
 
         
 
@@ -535,9 +539,9 @@ HTML_TEMPLATE = """
 
                 matches = []
 
-                                if embedding is not None:
+                if embedding is not None:
 
-                                    matches = find_top_matches_by_embedding(supabase, embedding, top_k=5)
+                    matches = find_top_matches_by_embedding(supabase, embedding, top_k=5)
 
         
 
@@ -593,63 +597,119 @@ HTML_TEMPLATE = """
 
         
 
-
-
-@app.route('/details/<filename>')
-def get_details(filename):
-    """Returns OCR results, embedding details, and matches for a given filename."""
-    try:
-        response = supabase.table('snapshots').select('ocr_text, embedding').eq('image_path', filename).single().execute()
-        data = response.data
-        if not data:
-            return jsonify({'error': 'Snapshot not found'}), 404
-
-        # The ocr_text is stored as a comma-separated string, let's pretend we can parse it back
-        # This part is a bit of a simplification. Storing structured data would be better.
-        ocr_results = [(text, 0.99) for text in data.get('ocr_text', '').split(', ')] if data.get('ocr_text') else []
-
-        embedding = data.get('embedding')
-        embedding_summary = "Not found"
-        matches = []
-        if embedding:
-            embedding_summary = f"Exists (first 5 values: {', '.join(map(str, embedding[:5]))}...)"
-            matches = find_top_matches_by_embedding(np.array(embedding), top_k=5)
-
-        return jsonify({
-            'ocr_results': ocr_results,
-            'embedding_summary': embedding_summary,
-            'matches': matches or []
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/gallery')
-def get_gallery_items():
-    try:
-        response = supabase.table('snapshots').select('image_path, ocr_text').order('created_at', desc=True).limit(20).execute()
-        data = response.data
         
-        gallery_items = []
-        for item in data:
-            filename = item['image_path']
-            public_url = supabase.storage.from_('vinyl_images').get_public_url(filename)
-            # Simplification for OCR text display
-            ocr_texts = item.get('ocr_text', '').split(', ')
-            ocr_results = [(text, 1.0) for text in ocr_texts if text]
 
-            gallery_items.append({
-                'filename': filename,
-                'public_url': public_url,
-                'ocr_results': ocr_results
-            })
+        @app.route('/details/<filename>')
 
-        return jsonify(gallery_items)
-    except Exception as e:
-        print(f"Error in get_gallery_items: {e}")
-        return jsonify([]), 500
+        def get_details(filename):
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+            """Returns OCR results, embedding details, and matches for a given filename."""
+
+            try:
+
+                response = supabase.table('snapshots').select('ocr_text, embedding').eq('image_path', filename).single().execute()
+
+                data = response.data
+
+                if not data:
+
+                    return jsonify({'error': 'Snapshot not found'}), 404
+
+        
+
+                # The ocr_text is stored as a comma-separated string, let's pretend we can parse it back
+
+                # This part is a bit of a simplification. Storing structured data would be better.
+
+                ocr_results = [(text, 0.99) for text in data.get('ocr_text', '').split(', ')] if data.get('ocr_text') else []
+
+        
+
+                embedding = data.get('embedding')
+
+                embedding_summary = "Not found"
+
+                matches = []
+
+                if embedding:
+
+                    embedding_summary = f"Exists (first 5 values: {', '.join(map(str, embedding[:5]))}...)"
+
+                    matches = find_top_matches_by_embedding(supabase, np.array(embedding), top_k=5)
+
+        
+
+                return jsonify({
+
+                    'ocr_results': ocr_results,
+
+                    'embedding_summary': embedding_summary,
+
+                    'matches': matches or []
+
+                })
+
+            except Exception as e:
+
+                return jsonify({'error': str(e)}), 500
+
+        
+
+        @app.route('/gallery')
+
+        def get_gallery_items():
+
+            try:
+
+                response = supabase.table('snapshots').select('image_path, ocr_text').order('created_at', desc=True).limit(20).execute()
+
+                data = response.data
+
+                
+
+                gallery_items = []
+
+                for item in data:
+
+                    filename = item['image_path']
+
+                    public_url = supabase.storage.from_('vinyl_images').get_public_url(filename)
+
+                    # Simplification for OCR text display
+
+                    ocr_texts = item.get('ocr_text', '').split(', ')
+
+                    ocr_results = [(text, 1.0) for text in ocr_texts if text]
+
+        
+
+                    gallery_items.append({
+
+                        'filename': filename,
+
+                        'public_url': public_url,
+
+                        'ocr_results': ocr_results
+
+                    })
+
+        
+
+                return jsonify(gallery_items)
+
+            except Exception as e:
+
+                print(f"Error in get_gallery_items: {e}")
+
+                return jsonify([]), 500
+
+        
+
+        if __name__ == '__main__':
+
+            app.run(debug=True, port=5000)
+
+        
 
 
         
