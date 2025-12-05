@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import base64
 import datetime
 from flask import Flask, render_template_string, request, jsonify
@@ -9,8 +10,9 @@ import numpy as np
 app = Flask(__name__)
 
 # Supabase configuration
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+load_dotenv()
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # Configuration
@@ -412,4 +414,4 @@ def get_gallery_items():
         return jsonify([]), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, ssl_context='adhoc')
