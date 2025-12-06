@@ -1,13 +1,14 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Install a comprehensive set of system dependencies required by OpenCV and other CV libraries
+# Install a comprehensive set of system dependencies required by OpenCV and other CV libraries, and psycopg2
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 \
+    libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
