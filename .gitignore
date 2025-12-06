@@ -9,3 +9,9 @@ snapshots/
 
 # Ignore .env file as it contains sensitive information
 .env
+__pycache__/
+
+# Ignore local development scripts and generated certs
+run_local_https.py
+cert.pem
+key.pem

@@ -4,8 +4,6 @@ gunicorn
 
 # Database
 psycopg2-binary
-pgvector
-sqlalchemy
 supabase
 
 # Machine Learning & Data Processing
@@ -15,7 +13,6 @@ torch==2.9.0
 transformers
 paddleocr
 opencv-python
-google-cloud-vision
 
 # APIs & Utilities
 python-dotenv
