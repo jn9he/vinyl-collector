@@ -1,8 +1,14 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Install system dependencies required by OpenCV
-RUN apt-get update && apt-get install -y libgl1 && rm -rf /var/lib/apt/lists/*
+# Install a comprehensive set of system dependencies required by OpenCV and other CV libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
 WORKDIR /app
