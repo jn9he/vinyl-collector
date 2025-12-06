@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set the working directory in the container
 WORKDIR /app
 
+# Prevent paddleocr from trying to write to a non-existent home directory
+ENV PADDLEOCR_HOME=/app/.paddleocr
+RUN mkdir -p $PADDLEOCR_HOME
+
 # Copy the dependencies file to the working directory
 COPY requirements.txt .
 
